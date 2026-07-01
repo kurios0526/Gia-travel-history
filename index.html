@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지아와 함께한 여행들 | 가족여행 사진첩</title>
+
+<!-- ============================================================
+  가족여행 사진첩 - 목록 페이지
+
+  여행 데이터는 trips-data.js 파일에 있습니다.
+  새 여행을 추가/수정하려면 trips-data.js 파일만 여시면 됩니다.
+  (이 파일과 trip-detail.html은 건드리실 필요 없어요)
+
+  ※ trips-data.js 파일이 반드시 같은 폴더에 있어야 합니다.
+============================================================= -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#FBF3E7;
+    --paper-edge:#EFE2C8;
+    --ink:#4A3F35;
+    --ink-soft:#7A6F60;
+    --coral:#E2795F;
+    --sage:#8FA681;
+    --butter:#E7BE5C;
+    --sky:#7CA6C7;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(74,63,53,0.05) 1px, transparent 0) 0 0/24px 24px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Nanum Gothic', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; }
+
+  header{
+    max-width:1040px;
+    margin:0 auto;
+    padding:80px 24px 50px;
+    text-align:center;
+  }
+
+  .eyebrow{
+    display:inline-block;
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    color:#fff;
+    background:var(--coral);
+    padding:5px 16px;
+    border-radius:20px;
+    transform:rotate(-2deg);
+    margin-bottom:26px;
+  }
+
+  h1{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:clamp(34px, 5.8vw, 60px);
+    line-height:1.3;
+    margin:0 0 18px;
+    color:var(--ink);
+  }
+
+  header p{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--ink-soft);
+    max-width:480px;
+    margin:0 auto;
+  }
+
+  main{
+    max-width:1120px;
+    margin:0 auto;
+    padding:20px 32px 110px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(270px, 1fr));
+    gap:70px 40px;
+  }
+
+  .polaroid{
+    position:relative;
+    background:#fff;
+    padding:14px 14px 0;
+    border-radius:2px;
+    box-shadow:0 14px 24px rgba(74,63,53,0.18);
+    display:block;
+    width:100%;
+    text-align:inherit;
+    color:var(--ink);
+    text-decoration:none;
+    cursor:pointer;
+    transform:rotate(var(--tilt, -2deg));
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease;
+  }
+  .polaroid:nth-child(even){ --tilt:2.4deg; }
+  .polaroid:nth-child(3n){ --tilt:-1.2deg; }
+  .polaroid:nth-child(4n){ --tilt:1.6deg; }
+
+  @media (hover:hover){
+    .polaroid:hover{
+      transform:rotate(0deg) translateY(-8px) scale(1.02);
+      box-shadow:0 26px 36px rgba(74,63,53,0.26);
+    }
+  }
+  .polaroid:focus-visible{ outline:2px solid var(--coral); outline-offset:4px; }
+
+  .tape{
+    position:absolute;
+    top:-16px;
+    left:50%;
+    width:90px; height:30px;
+    background:var(--tape-color, var(--butter));
+    opacity:0.75;
+    transform:translateX(-50%) rotate(-4deg);
+    box-shadow:0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  .photo{
+    position:relative;
+    aspect-ratio:4/3.1;
+    border-radius:1px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 55%),
+      linear-gradient(150deg, var(--tone-a, var(--coral)), var(--tone-b, var(--butter)));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .photo img{ width:100%; height:100%; object-fit:cover; }
+  .photo svg{ width:38%; height:38%; opacity:0.9; stroke:#fff; fill:none; stroke-width:1.4; }
+
+  .order-tag{
+    position:absolute;
+    bottom:8px; left:8px;
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:#fff;
+    background:rgba(0,0,0,0.28);
+    padding:2px 9px;
+    border-radius:10px;
+  }
+
+  .tap-hint{
+    position:absolute;
+    bottom:8px; right:8px;
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:11.5px;
+    color:#fff;
+    background:rgba(0,0,0,0.28);
+    padding:2px 9px;
+    border-radius:10px;
+    opacity:0;
+    transition:opacity .2s ease;
+  }
+  .polaroid:hover .tap-hint, .polaroid:focus-visible .tap-hint{ opacity:1; }
+
+  .caption{
+    padding:16px 8px 22px;
+    text-align:center;
+  }
+
+  .caption .date{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:19px;
+    color:var(--ink);
+    margin:0 0 3px;
+  }
+
+  .caption .place{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+
+  .caption .note{
+    font-size:13px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    margin:0;
+    min-height:20px;
+  }
+
+  .empty-hint{
+    grid-column:1/-1;
+    text-align:center;
+    padding:40px 20px;
+    border:1.5px dashed var(--paper-edge);
+    border-radius:10px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+
+  footer{
+    max-width:640px;
+    margin:0 auto;
+    padding:0 24px 90px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-family:'Gaegu', sans-serif;
+    font-size:15px;
+  }
+
+  @media (prefers-reduced-motion: reduce){ .polaroid{ transition:none; } }
+
+  @media (max-width:640px){
+    .polaroid{ transform:none !important; }
+    header{ padding:60px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">FAMILY ALBUM</span>
+  <h1>지아와 함께한<br>여행들</h1>
+  <p>바쁜 삶 속에서도 하나님이 선물처럼 허락하신 시간들.<br>지아와 함께, 매년 그 시간을 기록합니다.</p>
+</header>
+
+<main>
+  <div class="grid" id="tripGrid"></div>
+</main>
+
+<footer>
+  다음 여행 사진도 여기에 붙여둘게요 :)
+</footer>
+
+<script src="trips-data.js"></script>
+<script>
+function renderCards(){
+  const grid = document.getElementById('tripGrid');
+  if(!TRIPS.length){
+    grid.innerHTML = '<div class="empty-hint">아직 등록된 여행이 없습니다. trips-data.js 파일에 여행을 추가해보세요.</div>';
+    return;
+  }
+
+  grid.innerHTML = TRIPS.map((trip) => {
+    const tones = TONES[trip.tone] || TONES.coral;
+    const a = tones[0], b = tones[1];
+    const tape = TAPE_COLORS[trip.tone] || TAPE_COLORS.coral;
+    const icon = ICONS[trip.icon] || ICONS.plane;
+    const orderNum = String(trip.order).padStart(2, '0');
+    const note = trip.note ? '<p class="note">' + trip.note + '</p>' : '<p class="note"></p>';
+    const photoInner = trip.coverImage
+      ? '<img src="' + trip.coverImage + '" alt="' + trip.title + '">'
+      : icon;
+
+    return '' +
+      '<a class="polaroid" style="--tone-a:' + a + '; --tone-b:' + b + ';" href="trip-detail.html?id=' + trip.order + '">' +
+        '<div class="tape" style="--tape-color:' + tape + '"></div>' +
+        '<div class="photo" style="--tone-a:' + a + '; --tone-b:' + b + ';">' +
+          photoInner +
+          '<span class="order-tag">' + orderNum + '</span>' +
+          '<span class="tap-hint">자세히 보기 →</span>' +
+        '</div>' +
+        '<div class="caption">' +
+          '<p class="date">' + trip.dateLabel + '</p>' +
+          '<p class="place">' + trip.title + ' · ' + trip.country + '</p>' +
+          note +
+        '</div>' +
+      '</a>';
+  }).join('');
+}
+
+renderCards();
+</script>
+
+</body>
+</html>
