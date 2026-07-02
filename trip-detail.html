@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>여행 상세 | 지아와 함께한 여행들</title>
+
+<!-- ============================================================
+  여행 상세 페이지
+  index.html의 카드를 클릭하면 이 페이지가 "trip-detail.html?id=번호"
+  형태로 열리고, trips-data.js에서 해당 번호(order)의 여행을 찾아 보여줍니다.
+
+  이 파일은 수정하실 필요 없습니다. 내용은 trips-data.js에서 수정하세요.
+============================================================= -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#FBF3E7;
+    --paper-edge:#EFE2C8;
+    --ink:#4A3F35;
+    --ink-soft:#7A6F60;
+    --coral:#E2795F;
+    --sage:#8FA681;
+    --butter:#E7BE5C;
+    --sky:#7CA6C7;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(74,63,53,0.05) 1px, transparent 0) 0 0/24px 24px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Nanum Gothic', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; }
+
+  .topbar{
+    max-width:680px;
+    margin:0 auto;
+    padding:28px 24px 0;
+  }
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    text-decoration:none;
+    color:var(--ink-soft);
+  }
+  .back-link:hover{ color:var(--coral); }
+
+  .wrap{
+    max-width:680px;
+    margin:0 auto;
+    padding:24px 24px 90px;
+  }
+
+  .card{
+    position:relative;
+    background:var(--paper);
+    border-radius:8px;
+    padding:8px 8px 6px;
+  }
+
+  .tape{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    width:100px; height:32px;
+    background:var(--tape-color, var(--butter));
+    opacity:0.75;
+    transform:translateX(-50%) rotate(-3deg);
+    box-shadow:0 2px 4px rgba(0,0,0,0.08);
+    z-index:2;
+  }
+
+  .hero{
+    position:relative;
+    aspect-ratio:16/9;
+    border-radius:6px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(255,255,255,0.35), transparent 55%),
+      linear-gradient(150deg, var(--tone-a, var(--coral)), var(--tone-b, var(--butter)));
+  }
+  .hero img{ width:100%; height:100%; object-fit:cover; }
+  .hero svg{ width:70px; height:70px; opacity:0.9; stroke:#fff; fill:none; stroke-width:1.3; }
+
+  .body-pad{ padding:28px 20px 10px; }
+
+  .date-label{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink-soft);
+    margin:0 0 4px;
+  }
+
+  h1{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 6vw, 40px);
+    margin:0 0 6px;
+    line-height:1.25;
+  }
+
+  .place-line{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+  }
+
+  .note{
+    font-size:15px;
+    line-height:1.75;
+    color:var(--ink-soft);
+    margin:0 0 26px;
+  }
+
+  .section-title{
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink);
+    margin:0 0 12px;
+  }
+
+  .section{
+    padding:22px 0;
+    border-top:1.5px dashed var(--paper-edge);
+  }
+  .section:first-of-type{ border-top:none; padding-top:0; }
+
+  .companion-chip{
+    display:inline-block;
+    font-size:13.5px;
+    background:#fff;
+    border:1.4px solid var(--paper-edge);
+    padding:6px 13px;
+    border-radius:14px;
+    margin:0 8px 8px 0;
+  }
+
+  .actions{ display:flex; flex-wrap:wrap; gap:12px; }
+
+  .big-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:14px;
+    font-weight:800;
+    text-decoration:none;
+    color:#fff;
+    background:var(--tone-a, var(--coral));
+    padding:11px 18px;
+    border-radius:22px;
+  }
+  .big-btn.secondary{ background:var(--ink); }
+  .big-btn.pending{
+    background:#fff;
+    color:#B7ADA0;
+    border:1.4px dashed var(--paper-edge);
+    pointer-events:none;
+  }
+
+  .itinerary-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:13px; }
+  .itinerary-list li{ display:flex; gap:14px; align-items:baseline; font-size:14.5px; line-height:1.7; }
+  .itinerary-list .day-tag{
+    font-weight:700;
+    font-size:12px;
+    color:#fff;
+    background:var(--tone-a, var(--coral));
+    padding:3px 10px;
+    border-radius:11px;
+    flex-shrink:0;
+    white-space:nowrap;
+  }
+  .itinerary-list .day-text{ color:var(--ink-soft); }
+
+  .empty-note{ font-size:14px; color:#B7ADA0; }
+
+  .accom-card{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    background:#fff;
+    border:1.4px solid var(--paper-edge);
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:10px;
+  }
+  .accom-thumb{
+    width:60px; height:60px;
+    border-radius:8px;
+    flex-shrink:0;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .accom-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .accom-thumb svg{ width:26px; height:26px; stroke:#fff; fill:none; stroke-width:1.5; }
+  .accom-info .name{ font-weight:700; font-size:14px; margin:0 0 2px; }
+  .accom-info .meta{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+  .accom-info .res{ font-size:11px; color:#B7ADA0; margin:2px 0 0; }
+
+  .flight-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:#fff;
+    border:1.4px solid var(--paper-edge);
+    border-radius:12px;
+    padding:10px 14px;
+    margin-bottom:10px;
+  }
+  .airline-badge{
+    width:42px; height:42px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-weight:800;
+    font-size:12.5px;
+    flex-shrink:0;
+  }
+  .flight-info .route{ font-weight:700; font-size:14px; margin:0 0 2px; }
+  .flight-info .meta{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+
+  .doc-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:14px;
+    font-weight:700;
+    text-decoration:none;
+    color:var(--ink);
+    background:#fff;
+    border:1.4px solid var(--paper-edge);
+    padding:9px 15px;
+    border-radius:18px;
+    margin:0 10px 10px 0;
+  }
+  .doc-chip:hover{ border-color:var(--tone-a, var(--coral)); color:var(--tone-a, var(--coral)); }
+  .doc-chip svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+  .not-found{
+    text-align:center;
+    padding:100px 24px;
+    color:var(--ink-soft);
+    font-family:'Gaegu', sans-serif;
+    font-size:20px;
+  }
+
+  @media (max-width:640px){
+    .body-pad{ padding:24px 6px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-link" href="index.html">← 여행 목록으로</a>
+</div>
+
+<div class="wrap" id="content"></div>
+
+<script src="trips-data.js"></script>
+<script>
+function getTrip(){
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id'));
+  return TRIPS.find(t => t.order === id);
+}
+
+function render(){
+  const trip = getTrip();
+  const content = document.getElementById('content');
+
+  if(!trip){
+    content.innerHTML = '<div class="not-found">여행 정보를 찾을 수 없어요.<br><a class="back-link" href="index.html">← 목록으로 돌아가기</a></div>';
+    return;
+  }
+
+  const tones = TONES[trip.tone] || TONES.coral;
+  const a = tones[0], b = tones[1];
+  const icon = ICONS[trip.icon] || ICONS.plane;
+  const tape = TAPE_COLORS[trip.tone] || TAPE_COLORS.coral;
+
+  document.title = trip.title + ' | 지아와 함께한 여행들';
+
+  const heroInner = trip.coverImage
+    ? '<img src="' + trip.coverImage + '" alt="' + trip.title + '">'
+    : icon;
+
+  const companionsHTML = trip.companions
+    ? trip.companions.split(',').map(n => '<span class="companion-chip">' + n.trim() + '</span>').join('')
+    : '<span class="empty-note">아직 등록된 동행자가 없어요</span>';
+
+  const photoBtn = trip.photoUrl
+    ? '<a class="big-btn" style="--tone-a:' + a + '" href="' + trip.photoUrl + '" target="_blank" rel="noopener">사진 보러가기 ↗</a>'
+    : '<span class="big-btn pending">사진 준비 중</span>';
+
+  const detailBtn = trip.detailUrl
+    ? '<a class="big-btn secondary" href="' + trip.detailUrl + '" target="_blank" rel="noopener">전체 일정 앱 보기 ↗</a>'
+    : '';
+
+  const itineraryHTML = (trip.itinerary && trip.itinerary.length)
+    ? '<ul class="itinerary-list">' + trip.itinerary.map(d =>
+        '<li><span class="day-tag" style="background:' + a + '">' + d.day + '</span><span class="day-text">' + d.text + '</span></li>'
+      ).join('') + '</ul>'
+    : '<span class="empty-note">아직 등록된 일정이 없어요</span>';
+
+  const accomHTML = (trip.accommodations && trip.accommodations.length)
+    ? trip.accommodations.map(h => {
+        const thumbInner = h.image
+          ? '<img src="' + h.image + '" alt="' + h.name + '">'
+          : ICONS.mountain;
+        const resLine = h.reservationNo ? '<p class="res">예약번호 ' + h.reservationNo + '</p>' : '';
+        const checkInText = h.checkIn ? ' · 체크인 ' + h.checkIn : '';
+        const dateText = h.dates ? h.dates + checkInText : (h.checkIn ? '체크인 ' + h.checkIn : '');
+        const nameHTML = h.url
+          ? '<a href="' + h.url + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + h.name + ' ↗</a>'
+          : h.name;
+        return '<div class="accom-card">' +
+          '<div class="accom-thumb" style="background:linear-gradient(150deg,' + a + ',' + b + ')">' + thumbInner + '</div>' +
+          '<div class="accom-info">' +
+            '<p class="name">' + nameHTML + '</p>' +
+            (dateText ? '<p class="meta">' + dateText + '</p>' : '') +
+            resLine +
+          '</div>' +
+        '</div>';
+      }).join('')
+    : '<span class="empty-note">아직 등록된 숙소가 없어요</span>';
+
+  const flightsHTML = (trip.flights && trip.flights.length)
+    ? trip.flights.map(f => {
+        const air = AIRLINES[f.code] || { name:f.code, color:'#7A6F60' };
+        return '<div class="flight-card">' +
+          '<div class="airline-badge" style="background:' + air.color + '">' + f.code + '</div>' +
+          '<div class="flight-info">' +
+            '<p class="route">' + f.route + '</p>' +
+            '<p class="meta">' + air.name + (f.flightNo ? ' ' + f.flightNo : '') + ' · ' + f.date + ' ' + f.time + '</p>' +
+          '</div>' +
+        '</div>';
+      }).join('')
+    : '<span class="empty-note">아직 등록된 항공편이 없어요</span>';
+
+  const docsHTML = (trip.documents && trip.documents.length)
+    ? trip.documents.map(d =>
+        '<a class="doc-chip" href="' + d.url + '" target="_blank" rel="noopener">' + docIcon + d.label + '</a>'
+      ).join('')
+    : '<span class="empty-note">항공권, 입장권, 예약 확인서 등을 스캔해서 추가해보세요</span>';
+
+  const noteBlock = trip.note ? '<p class="note">' + trip.note + '</p>' : '';
+
+  content.innerHTML = '' +
+    '<div class="card">' +
+      '<div class="tape" style="--tape-color:' + tape + '"></div>' +
+      '<div class="hero" style="--tone-a:' + a + '; --tone-b:' + b + ';">' + heroInner + '</div>' +
+      '<div class="body-pad">' +
+        '<p class="date-label">' + trip.dateLabel + '</p>' +
+        '<h1>' + trip.title + '</h1>' +
+        '<p class="place-line">' + trip.country + '</p>' +
+        noteBlock +
+        '<div class="section">' +
+          '<p class="section-title">함께한 사람</p>' +
+          companionsHTML +
+        '</div>' +
+        '<div class="section">' +
+          '<p class="section-title">일정</p>' +
+          itineraryHTML +
+        '</div>' +
+        '<div class="section">' +
+          '<p class="section-title">숙소</p>' +
+          accomHTML +
+        '</div>' +
+        '<div class="section">' +
+          '<p class="section-title">항공편</p>' +
+          flightsHTML +
+        '</div>' +
+        '<div class="section">' +
+          '<p class="section-title">항공권 · 입장권 스캔본</p>' +
+          docsHTML +
+        '</div>' +
+        '<div class="section">' +
+          '<div class="actions">' + photoBtn + detailBtn + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+render();
+</script>
+
+</body>
+</html>
